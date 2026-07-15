@@ -1,0 +1,41 @@
+<VirtualHost *:80>
+ ServerName tpanel.rodrigogml.eng.br
+ ServerAdmin turing@rodrigogml.eng.br
+ DocumentRoot /srv/apache/vhosts/tpanel.rodrigogml.eng.br/www/public
+
+ <Directory /srv/apache/vhosts/tpanel.rodrigogml.eng.br/www/public>
+  AuthType Basic
+  AuthName "TPanel"
+  AuthUserFile /etc/apache2/tpanel.htpasswd
+  Require valid-user
+  AllowOverride None
+  Options -Indexes +FollowSymLinks
+  DirectoryIndex index.php
+ </Directory>
+
+ ErrorLog ${APACHE_LOG_DIR}/tpanel.rodrigogml.eng.br-error.log
+ CustomLog ${APACHE_LOG_DIR}/tpanel.rodrigogml.eng.br-access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+ ServerName tpanel.rodrigogml.eng.br
+ ServerAdmin turing@rodrigogml.eng.br
+ DocumentRoot /srv/apache/vhosts/tpanel.rodrigogml.eng.br/www/public
+
+ SSLEngine on
+ SSLCertificateFile /etc/ssl/central/tpanel.rodrigogml.eng.br/fullchain.pem
+ SSLCertificateKeyFile /etc/ssl/central/tpanel.rodrigogml.eng.br/privkey.pem
+
+ <Directory /srv/apache/vhosts/tpanel.rodrigogml.eng.br/www/public>
+  AuthType Basic
+  AuthName "TPanel"
+  AuthUserFile /etc/apache2/tpanel.htpasswd
+  Require valid-user
+  AllowOverride None
+  Options -Indexes +FollowSymLinks
+  DirectoryIndex index.php
+ </Directory>
+
+ ErrorLog ${APACHE_LOG_DIR}/tpanel.rodrigogml.eng.br-ssl-error.log
+ CustomLog ${APACHE_LOG_DIR}/tpanel.rodrigogml.eng.br-ssl-access.log combined
+</VirtualHost>

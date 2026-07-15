@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'appName' => 'TPanel',
+    'environment' => 'local',
+    'timezone' => 'America/Sao_Paulo',
+    'basePath' => '/tpanel',
+    'trustedProxies' => [],
+    'auth' => [
+        'apacheUserServerKey' => 'REMOTE_USER',
+        'defaultRole' => 'MONITOR',
+        'adminUsers' => [
+            'admin-user-example',
+        ],
+    ],
+    'ui' => [
+        'defaultTheme' => 'dark',
+        'refreshSeconds' => 30,
+        'autoRefreshEnabled' => true,
+        'minimumRefreshSeconds' => 10,
+    ],
+    'monitoring' => [
+        'retentionDays' => 90,
+        'rawHistoryEnabled' => true,
+        'persistentAggregationsEnabled' => false,
+        'collectionIntervalsSeconds' => [
+            'SYSTEM' => 60,
+            'CPU' => 30,
+            'MEMORY' => 30,
+            'STORAGE' => 300,
+            'DISK_HEALTH' => 900,
+            'RAID' => 300,
+            'NETWORK' => 30,
+            'SERVICE' => 60,
+            'PROCESS' => 30,
+            'LOG' => 300,
+            'SECURITY' => 300,
+            'SENSOR' => 60,
+            'SCHEDULE' => 300,
+        ],
+    ],
+];

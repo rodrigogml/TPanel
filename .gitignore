@@ -1,0 +1,35 @@
+# Composer and generated dependencies
+/vendor/
+
+# Runtime configuration with local secrets or host-specific values
+/config/app.php
+/config/database.php
+/config/commands.php
+/config/monitoring.php
+/config/noticli.php
+/config/*.local.php
+/config/*.secret.php
+
+# Runtime state, logs and caches
+/var/
+/tmp/
+/logs/
+*.log
+*.cache
+
+# Environment files
+.env
+.env.*
+!.env.model
+
+# OS/editor artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Test and coverage output
+/coverage/
+/.phpunit.cache/

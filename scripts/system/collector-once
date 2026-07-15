@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+usage() {
+    echo "usage: collector-once <metricCategory>" >&2
+    exit 64
+}
+
+[ "$#" -eq 1 ] || usage
+metric_category="$1"
+
+case "$metric_category" in
+    SYSTEM|CPU|MEMORY|STORAGE|DISK_HEALTH|RAID|NETWORK|SERVICE|PROCESS|LOG|SECURITY|SENSOR|SCHEDULE)
+        ;;
+    *)
+        echo "invalid metricCategory" >&2
+        exit 64
+        ;;
+esac
+
+echo "collector category accepted: $metric_category"
+echo "collector implementation is not installed on this host" >&2
+exit 69

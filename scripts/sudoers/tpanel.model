@@ -1,0 +1,25 @@
+# TPanel sudoers model.
+# Install as /etc/sudoers.d/tpanel after reviewing paths and validating with visudo -c.
+
+Defaults:www-data !requiretty
+
+Cmnd_Alias TPANEL_SERVICE_STATUS = /opt/tpanel/scripts/system/service-status *
+Cmnd_Alias TPANEL_SERVICE_RESTART = /opt/tpanel/scripts/system/service-restart *
+Cmnd_Alias TPANEL_SERVICE_RELOAD = /opt/tpanel/scripts/system/service-reload *
+Cmnd_Alias TPANEL_DOCKER_CONTAINER_STATUS = /opt/tpanel/scripts/system/docker-container-status *
+Cmnd_Alias TPANEL_DOCKER_CONTAINER_RESTART = /opt/tpanel/scripts/system/docker-container-restart *
+Cmnd_Alias TPANEL_TIMER_STATUS = /opt/tpanel/scripts/system/timer-status *
+Cmnd_Alias TPANEL_TIMER_RESTART = /opt/tpanel/scripts/system/timer-restart *
+Cmnd_Alias TPANEL_COLLECTOR_ONCE = /opt/tpanel/scripts/system/collector-once *
+Cmnd_Alias TPANEL_NOTICLI_TEST = /opt/tpanel/scripts/system/noticli-test *
+
+www-data ALL=(tpanel) NOPASSWD: \
+    TPANEL_SERVICE_STATUS, \
+    TPANEL_SERVICE_RESTART, \
+    TPANEL_SERVICE_RELOAD, \
+    TPANEL_DOCKER_CONTAINER_STATUS, \
+    TPANEL_DOCKER_CONTAINER_RESTART, \
+    TPANEL_TIMER_STATUS, \
+    TPANEL_TIMER_RESTART, \
+    TPANEL_COLLECTOR_ONCE, \
+    TPANEL_NOTICLI_TEST

@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'thresholds' => [
+        'cpu' => [
+            'usagePercentWarning' => 75.0,
+            'usagePercentCritical' => 90.0,
+        ],
+        'memory' => [
+            'ramUsedPercentWarning' => 80.0,
+            'ramUsedPercentCritical' => 90.0,
+        ],
+        'storage' => [
+            'filesystemUsedPercentWarning' => 80.0,
+            'filesystemUsedPercentCritical' => 90.0,
+            'inodeUsedPercentWarning' => 80.0,
+            'inodeUsedPercentCritical' => 90.0,
+        ],
+        'diskHealth' => [
+            'temperatureCelsiusWarning' => 55.0,
+            'temperatureCelsiusCritical' => 65.0,
+            'reallocatedSectorsWarning' => 1,
+            'reallocatedSectorsCritical' => 50,
+            'criticalErrorsCritical' => 1,
+        ],
+        'network' => [
+            'latencyMsWarning' => 100.0,
+            'latencyMsCritical' => 250.0,
+            'interfaceErrorsWarning' => 1,
+            'interfaceErrorsCritical' => 100,
+        ],
+        'service' => [
+            'failedStates' => ['FAILED'],
+            'warningStates' => ['INACTIVE', 'ACTIVATING', 'DEACTIVATING'],
+        ],
+    ],
+];

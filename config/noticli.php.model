@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    // TPanel never stores NotiCLI provider secrets. Keep routes, accounts,
+    // webhooks, SMTP passwords and Telegram tokens in the NotiCLI config.
+    'enabled' => false,
+    'binaryPath' => '/usr/local/bin/noticli',
+    'sendCommand' => 'send',
+    'defaultSender' => 'TPanel',
+    'defaultPriority' => 'NORMAL',
+    'timeoutSeconds' => 10,
+    'useConfigOverride' => false,
+    // Leave null to let NotiCLI resolve config/noticli.json beside its binary.
+    // Set only when this TPanel installation must call a specific NotiCLI config.
+    'configPath' => null,
+    'priorities' => [
+        'HIGH',
+        'NORMAL',
+        'LOW',
+    ],
+    'categories' => [
+        'server',
+        'service',
+        'docker',
+        'disk',
+        'raid',
+        'security',
+        'schedule',
+        'audit',
+    ],
+    'fallbackWhenDisabled' => 'SKIPPED',
+];

@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'driver' => 'mysql',
+    'host' => '127.0.0.1',
+    'port' => 3306,
+    'database' => 'tpanel',
+    'username' => 'tpanel',
+    'password' => 'CHANGE_ME_LOCAL_ONLY',
+    'charset' => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
+    'options' => [
+        'persistent' => false,
+        'timeoutSeconds' => 5,
+    ],
+];

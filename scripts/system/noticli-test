@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+usage() {
+    echo "usage: noticli-test <category> <priority>" >&2
+    exit 64
+}
+
+[ "$#" -eq 2 ] || usage
+category="$1"
+priority="$2"
+
+case "$category" in
+    server|service|docker|disk|raid|security|schedule|audit)
+        ;;
+    *)
+        echo "invalid category" >&2
+        exit 64
+        ;;
+esac
+
+case "$priority" in
+    HIGH|NORMAL|LOW)
+        ;;
+    *)
+        echo "invalid priority" >&2
+        exit 64
+        ;;
+esac
+
+if ! command -v noticli >/dev/null 2>&1; then
+    echo "noticli command is not installed" >&2
+    exit 69
+fi
+
+exec noticli send \
+    --sender TPanel \
+    --category "$category" \
+    --priority "$priority" \
+    --title "TPanel notification test" \
+    --message "TPanel test notification for category $category"
