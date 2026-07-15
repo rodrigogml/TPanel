@@ -42,7 +42,7 @@ final class DashboardServiceTest extends TestCase
             array_column($summary['actionResultStatuses'], 'status')
         );
         self::assertNotEmpty($summary['auditRecords']);
-        self::assertNotEmpty($summary['operationalAlerts']);
+        self::assertIsArray($summary['operationalAlerts']);
     }
 
     public function testMonitorReceivesNoAdministrativeActionControls(): void

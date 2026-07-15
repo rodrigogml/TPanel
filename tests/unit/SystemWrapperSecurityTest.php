@@ -68,6 +68,7 @@ final class SystemWrapperSecurityTest extends TestCase
             ['timer-status', ['backup.timer', 'extra']],
             ['collector-once', ['CPU', 'extra']],
             ['noticli-test', ['service', 'HIGH', 'extra']],
+            ['memory-swap-reload', ['extra']],
         ];
 
         foreach ($cases as [$wrapperName, $arguments]) {

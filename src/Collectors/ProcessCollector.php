@@ -16,7 +16,7 @@ final class ProcessCollector
 
     public function collect(?DateTimeImmutable $collectedAt = null): ProcessSnapshot
     {
-        $processes = $this->parsePs($this->dataSource->runCommand('/bin/ps', '-eo', 'pid,pcpu,pmem,comm', '--no-headers') ?? '');
+        $processes = $this->parsePs($this->dataSource->runCommand('/bin/ps', '-eo', 'pid,user,pcpu,pmem,comm', '--no-headers') ?? '');
         $topByCpu = $this->sortProcesses($processes, 'cpuPercent');
         $topByMemory = $this->sortProcesses($processes, 'memoryPercent');
 
@@ -29,24 +29,25 @@ final class ProcessCollector
     }
 
     /**
-     * @return list<array{pid: int, command: string, cpuPercent: float, memoryPercent: float}>
+     * @return list<array{pid: int, user: string, command: string, cpuPercent: float, memoryPercent: float}>
      */
     private function parsePs(string $output): array
     {
         $processes = [];
 
         foreach (preg_split('/\R/', trim($output)) ?: [] as $line) {
-            $parts = preg_split('/\s+/', trim($line), 4) ?: [];
+            $parts = preg_split('/\s+/', trim($line), 5) ?: [];
 
-            if (count($parts) < 4 || !is_numeric($parts[0])) {
+            if (count($parts) < 5 || !is_numeric($parts[0])) {
                 continue;
             }
 
             $processes[] = [
                 'pid' => (int) $parts[0],
-                'cpuPercent' => (float) $parts[1],
-                'memoryPercent' => (float) $parts[2],
-                'command' => $parts[3],
+                'user' => $parts[1],
+                'cpuPercent' => (float) $parts[2],
+                'memoryPercent' => (float) $parts[3],
+                'command' => $parts[4],
             ];
         }
 
@@ -54,8 +55,8 @@ final class ProcessCollector
     }
 
     /**
-     * @param list<array{pid: int, command: string, cpuPercent: float, memoryPercent: float}> $processes
-     * @return list<array{pid: int, command: string, cpuPercent: float, memoryPercent: float}>
+     * @param list<array{pid: int, user: string, command: string, cpuPercent: float, memoryPercent: float}> $processes
+     * @return list<array{pid: int, user: string, command: string, cpuPercent: float, memoryPercent: float}>
      */
     private function sortProcesses(array $processes, string $field): array
     {

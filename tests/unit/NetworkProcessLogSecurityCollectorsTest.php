@@ -59,10 +59,10 @@ final class NetworkProcessLogSecurityCollectorsTest extends TestCase
     public function testProcessCollectorParsesTopCpuAndMemoryProcesses(): void
     {
         $collector = new ProcessCollector(new FakeSystemDataSource(commands: [
-            '/bin/ps -eo pid,pcpu,pmem,comm --no-headers' => implode("\n", [
-                ' 100  1.0  2.5 apache2',
-                ' 101 20.0  1.0 php-fpm',
-                ' 102  5.0 30.0 mysqld',
+            '/bin/ps -eo pid,user,pcpu,pmem,comm --no-headers' => implode("\n", [
+                ' 100 www-data  1.0  2.5 apache2',
+                ' 101 tpanel   20.0  1.0 php-fpm',
+                ' 102 mysql     5.0 30.0 mysqld',
                 '',
             ]),
         ]), limit: 2);
@@ -70,6 +70,7 @@ final class NetworkProcessLogSecurityCollectorsTest extends TestCase
         $snapshot = $collector->collect(new DateTimeImmutable('2026-07-15 13:01:00'));
 
         self::assertTrue($snapshot->available);
+        self::assertSame('tpanel', $snapshot->topByCpu[0]['user']);
         self::assertSame('php-fpm', $snapshot->topByCpu[0]['command']);
         self::assertSame(20.0, $snapshot->topByCpu[0]['cpuPercent']);
         self::assertSame('mysqld', $snapshot->topByMemory[0]['command']);

@@ -9,8 +9,8 @@ use DateTimeImmutable;
 final class ProcessSnapshot
 {
     /**
-     * @param list<array{pid: int, command: string, cpuPercent: float, memoryPercent: float}> $topByCpu
-     * @param list<array{pid: int, command: string, cpuPercent: float, memoryPercent: float}> $topByMemory
+     * @param list<array{pid: int, user: string, command: string, cpuPercent: float, memoryPercent: float}> $topByCpu
+     * @param list<array{pid: int, user: string, command: string, cpuPercent: float, memoryPercent: float}> $topByMemory
      */
     public function __construct(
         public readonly bool $available,

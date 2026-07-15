@@ -1,0 +1,93 @@
+#!/bin/sh
+set -eu
+
+usage() {
+    echo "usage: memory-swap-reload" >&2
+    exit 64
+}
+
+[ "$#" -eq 0 ] || usage
+
+margin_bytes=2147483648
+
+meminfo_value_bytes() {
+    key="$1"
+    awk -v key="$key" '$1 == key ":" {print $2 * 1024; found=1} END {if (!found) print 0}' /proc/meminfo
+}
+
+psi_value() {
+    class="$1"
+    field="$2"
+    awk -v class="$class" -v field="$field" '
+        $1 == class {
+            for (i = 2; i <= NF; i++) {
+                split($i, pair, "=")
+                if (pair[1] == field) {
+                    print pair[2]
+                    found=1
+                }
+            }
+        }
+        END { if (!found) print "0.00" }
+    ' /proc/pressure/memory 2>/dev/null || printf '0.00\n'
+}
+
+mem_available="$(meminfo_value_bytes MemAvailable)"
+swap_total="$(meminfo_value_bytes SwapTotal)"
+swap_free="$(meminfo_value_bytes SwapFree)"
+swap_used=$((swap_total - swap_free))
+
+if [ "$swap_total" -le 0 ]; then
+    echo "Ação bloqueada: este servidor não tem swap ativa." >&2
+    exit 75
+fi
+
+if [ "$swap_used" -le 0 ]; then
+    echo "Swap já está zerada."
+    exit 0
+fi
+
+required=$((swap_used + margin_bytes))
+
+if [ "$mem_available" -lt "$required" ]; then
+    printf 'Ação bloqueada: memória disponível insuficiente. Disponível=%s bytes; necessário=%s bytes (swap usada + 2 GB).\n' "$mem_available" "$required" >&2
+    exit 75
+fi
+
+psi_some="$(psi_value some avg10)"
+psi_full="$(psi_value full avg10)"
+
+if awk -v some="$psi_some" -v full="$psi_full" 'BEGIN { exit !((some >= 5.0) || (full >= 1.0)) }'; then
+    printf 'Ação bloqueada: há pressão de memória ativa. PSI some avg10=%s%%; full avg10=%s%%.\n' "$psi_some" "$psi_full" >&2
+    exit 75
+fi
+
+devices="$(awk 'NR > 1 {print $1}' /proc/swaps)"
+
+if [ -z "$devices" ]; then
+    echo "Ação bloqueada: nenhuma área de swap ativa foi encontrada." >&2
+    exit 75
+fi
+
+disabled=""
+
+for device in $devices; do
+    if /usr/sbin/swapoff "$device"; then
+        disabled="$disabled $device"
+    else
+        for previous in $disabled; do
+            /usr/sbin/swapon "$previous" >/dev/null 2>&1 || true
+        done
+        printf 'Ação bloqueada: falha ao desativar swap em %s. Áreas já alteradas foram reativadas.\n' "$device" >&2
+        exit 75
+    fi
+done
+
+for device in $disabled; do
+    if ! /usr/sbin/swapon "$device"; then
+        printf 'Ação falhou: swap foi desativada, mas não foi possível reativar %s. Verifique o servidor imediatamente.\n' "$device" >&2
+        exit 70
+    fi
+done
+
+printf 'Swap recarregada com segurança. %s bytes foram trazidos de volta para RAM antes da reativação.\n' "$swap_used"

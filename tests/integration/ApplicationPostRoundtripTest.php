@@ -38,7 +38,7 @@ final class ApplicationPostRoundtripTest extends TestCase
         );
 
         self::assertStringContainsString('MONITOR', $getHtml);
-        self::assertStringContainsString('Sem acoes permitidas', $getHtml);
+        self::assertStringContainsString('Sem ações permitidas', $getHtml);
         self::assertStringNotContainsString('Service status</button>', $getHtml);
 
         $postHtml = $this->application()->handle(
@@ -121,10 +121,10 @@ final class ApplicationPostRoundtripTest extends TestCase
         );
 
         foreach ([
-            'Saude geral',
+            'Saúde geral',
             'Uptime',
             'CPU',
-            'Memoria',
+            'Memória',
             'RAID',
             'Docker',
             'Monitoramento detalhado',

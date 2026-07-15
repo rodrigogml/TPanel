@@ -122,7 +122,7 @@ final class AuthorizedCommandExecutorTest extends TestCase
             requestId: 'req-in-progress',
             code: 'fwrite(STDOUT, "should not run\n");'
         );
-        $now = new DateTimeImmutable('2026-07-15 10:00:00');
+        $now = new DateTimeImmutable();
         $repository->reserve(
             requestId: $request->requestId(),
             actionKey: $request->actionKey(),

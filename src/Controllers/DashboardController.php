@@ -7,11 +7,13 @@ namespace TPanel\Controllers;
 use TPanel\Services\DashboardService;
 use TPanel\Services\WebSubmissionResult;
 use TPanel\Security\AuthenticatedUser;
+use TPanel\Support\TemplateRenderer;
 
 final class DashboardController
 {
     public function __construct(
-        private readonly DashboardService $dashboardService
+        private readonly DashboardService $dashboardService,
+        private readonly TemplateRenderer $templates = new TemplateRenderer(),
     ) {
     }
 
@@ -35,53 +37,12 @@ final class DashboardController
         $submissionFeedback = $this->renderSubmissionFeedback($submissionResult);
         $auditRows = $this->renderAuditRows($summary['auditRecords']);
         $operationalAlertRows = $this->renderOperationalAlertRows($summary['operationalAlerts']);
-        $alerts = $this->renderAlertRows($summary['alerts']);
 
-        return <<<HTML
-        <!doctype html>
-        <html lang="pt-BR" data-theme="dark">
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>{$name} - Turin Panel</title>
-            <link rel="stylesheet" href="/assets/css/tpanel.css">
-            <script src="/assets/js/tpanel.js" defer></script>
-        </head>
-        <body>
-            <div class="app-shell" data-shell>
-                <aside class="sidebar" aria-label="Navegacao principal">
-                    <div class="brand">
-                        <img class="brand-logo" src="/assets/images/tpanel-logo.png" alt="Turing Panel">
-                    </div>
-                    <nav class="nav-list">
-                        <a class="nav-item is-active" href="#top"><span>Visao geral</span></a>
-                        <a class="nav-item" href="#system"><span>Sistema</span></a>
-                        <a class="nav-item" href="#cpu-memory"><span>Recursos</span></a>
-                        <a class="nav-item" href="#process-logs"><span>Logs</span></a>
-                        <a class="nav-item" href="#schedules"><span>Agendamentos</span></a>
-                    </nav>
-                </aside>
-                <div class="workspace">
-                    <header class="topbar">
-                        <button class="icon-button menu-button" type="button" data-menu-toggle aria-label="Abrir menu">☰</button>
-                        <label class="search-box">
-                            <span class="search-icon" aria-hidden="true">⌕</span>
-                            <input type="search" placeholder="Pesquisar" aria-label="Pesquisar">
-                        </label>
-                        <div class="topbar-actions">
-                            <button class="icon-button" type="button" data-theme-toggle aria-label="Alternar tema">◐</button>
-                            <button class="alert-button" type="button" aria-label="Alertas">Alertas <strong>1</strong></button>
-                            <div class="user-chip">
-                                <span>{$username}</span>
-                                <strong>{$role}</strong>
-                            </div>
-                        </div>
-                    </header>
-                    <main class="content" id="top">
+        $content = <<<HTML
                         <section class="page-heading">
                             <div>
                                 <p class="eyebrow">{$name}</p>
-                                <h1>Operacao do servidor</h1>
+                                <h1>Operação do servidor</h1>
                             </div>
                             <div class="status-strip">
                                 <span class="severity-badge severity-{$healthStatus}">{$healthStatus}</span>
@@ -90,20 +51,20 @@ final class DashboardController
                                 <span>{$status}</span>
                             </div>
                         </section>
-                        <section class="metric-grid" aria-label="Resumo de saude">
+                        <section class="metric-grid" aria-label="Resumo de saúde">
                             {$cards}
                         </section>
                         <section class="detail-grid" aria-label="Monitoramento detalhado">
                             {$monitoringSections}
                         </section>
-                        <section class="action-results" aria-label="Resultados de acoes administrativas">
+                        <section class="action-results" aria-label="Resultados de ações administrativas">
                             {$actionResultStatuses}
                         </section>
                         {$submissionFeedback}
                         <section class="split-grid services-grid">
-                            <div class="panel">
+                            <div class="panel" id="alerts">
                                 <div class="panel-header">
-                                    <h2>Servicos</h2>
+                                    <h2>Serviços</h2>
                                     <span>Systemd</span>
                                 </div>
                                 <div class="table-wrap">
@@ -113,7 +74,7 @@ final class DashboardController
                                                 <th>Unidade</th>
                                                 <th>Estado</th>
                                                 <th>Severidade</th>
-                                                <th>Acoes</th>
+                                                <th>Ações</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -135,7 +96,7 @@ final class DashboardController
                                                 <th>Imagem</th>
                                                 <th>Estado</th>
                                                 <th>Severidade</th>
-                                                <th>Acoes</th>
+                                                <th>Ações</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -149,7 +110,7 @@ final class DashboardController
                             <div class="panel">
                                 <div class="panel-header">
                                     <h2>Auditoria</h2>
-                                    <span>Ultimas acoes</span>
+                                    <span>Últimas ações</span>
                                 </div>
                                 <form class="filter-bar" method="get" action="/">
                                     <select name="resultStatus" aria-label="Filtrar por resultado">
@@ -169,9 +130,9 @@ final class DashboardController
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Ator</th>
-                                                <th>Acao</th>
+                                                <th>Ação</th>
                                                 <th>Resultado</th>
-                                                <th>Horario</th>
+                                                <th>Horário</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -194,7 +155,7 @@ final class DashboardController
                                                 <th>Alerta</th>
                                                 <th>Severidade</th>
                                                 <th>Status</th>
-                                                <th>Acoes</th>
+                                                <th>Ações</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -206,7 +167,7 @@ final class DashboardController
                         </section>
                         <section class="panel comment-panel">
                             <div class="panel-header">
-                                <h2>Comentario operacional</h2>
+                                <h2>Comentário operacional</h2>
                                 <span>Alertas e auditoria</span>
                             </div>
                             <form class="comment-form" method="post" action="/">
@@ -216,16 +177,22 @@ final class DashboardController
                                     <option value="AUDIT_RECORD">AUDIT_RECORD</option>
                                 </select>
                                 <input type="number" name="targetId" min="1" placeholder="ID" aria-label="ID do alvo" required>
-                                <input type="text" name="commentText" placeholder="Comentario" aria-label="Comentario" required>
+                                <input type="text" name="commentText" placeholder="Comentário" aria-label="Comentário" required>
                                 <button type="submit">Comentar</button>
                             </form>
                         </section>
-                    </main>
-                </div>
-            </div>
-        </body>
-        </html>
         HTML;
+
+        return $this->templates->render('layouts/app.php', [
+            'activeNav' => 'overview',
+            'content' => $content,
+            'currentUser' => [
+                'username' => $username,
+                'role' => $role,
+            ],
+            'name' => $name,
+            'title' => $name . ' - Turin Panel',
+        ]);
     }
 
     /**
@@ -300,7 +267,7 @@ final class DashboardController
     private function renderActionControls(array $actions, string $targetKey, string $parameterName): string
     {
         if ($actions === []) {
-            return '<span class="muted-action">Sem acoes permitidas</span>';
+            return '<span class="muted-action">Sem ações permitidas</span>';
         }
 
         $html = '<div class="action-stack">';
@@ -404,6 +371,10 @@ final class DashboardController
      */
     private function renderOperationalAlertRows(array $alerts): string
     {
+        if ($alerts === []) {
+            return '<tr><td colspan="6">Nenhum alerta operacional ativo.</td></tr>';
+        }
+
         $html = '';
 
         foreach ($alerts as $alert) {

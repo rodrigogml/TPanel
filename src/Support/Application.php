@@ -8,7 +8,11 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use TPanel\Alerts\Alert;
 use TPanel\Command\AuthorizedCommandExecutor;
+use TPanel\Controllers\CpuController;
 use TPanel\Controllers\DashboardController;
+use TPanel\Controllers\DisksController;
+use TPanel\Controllers\MemoryController;
+use TPanel\Controllers\NetworkController;
 use TPanel\Repositories\InMemoryAlertRepository;
 use TPanel\Repositories\InMemoryAuditRecordRepository;
 use TPanel\Security\AuthenticatedUser;
@@ -39,11 +43,36 @@ final class Application
         $method = strtoupper($method ?? (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
         $post = $post ?? $_POST;
         $server = $server ?? $_SERVER;
+        $path = $this->pathFromServer($server);
         $actor = $this->actorFromServer($server);
         $auditRepository = new InMemoryAuditRecordRepository();
         $alertRepository = $this->seededAlertRepository();
         $auditService = new AuditService($auditRepository);
         $submissionResult = null;
+
+        if ($method === 'GET' && $path === '/cpu/live') {
+            if (!headers_sent()) {
+                header('Content-Type: application/json; charset=utf-8');
+            }
+
+            return (new CpuController())->live();
+        }
+
+        if ($method === 'GET' && $path === '/memory/live') {
+            if (!headers_sent()) {
+                header('Content-Type: application/json; charset=utf-8');
+            }
+
+            return (new MemoryController())->live();
+        }
+
+        if ($method === 'GET' && $path === '/network/live') {
+            if (!headers_sent()) {
+                header('Content-Type: application/json; charset=utf-8');
+            }
+
+            return (new NetworkController())->live();
+        }
 
         if ($method === 'POST') {
             try {
@@ -64,9 +93,36 @@ final class Application
             }
         }
 
+        if ($method === 'GET' && $path === '/cpu') {
+            return (new CpuController())->index($actor);
+        }
+
+        if (($method === 'GET' || $method === 'POST') && $path === '/memory') {
+            return (new MemoryController())->index($actor, $submissionResult);
+        }
+
+        if ($method === 'GET' && $path === '/disks') {
+            return (new DisksController())->index($actor);
+        }
+
+        if ($method === 'GET' && $path === '/network') {
+            return (new NetworkController())->index($actor);
+        }
+
         $controller = new DashboardController(new DashboardService(commandCatalog: $this->commandCatalog));
 
         return $controller->index($actor, $submissionResult);
+    }
+
+    /**
+     * @param array<string, mixed> $server
+     */
+    private function pathFromServer(array $server): string
+    {
+        $requestUri = (string) ($server['REQUEST_URI'] ?? '/');
+        $path = parse_url($requestUri, PHP_URL_PATH);
+
+        return is_string($path) && $path !== '' ? rtrim($path, '/') ?: '/' : '/';
     }
 
     /**
@@ -116,8 +172,8 @@ final class Application
             idMetricReading: null,
             alertSource: 'storage',
             severity: 'WARNING',
-            title: 'Uso de disco acima de 75%',
-            message: 'Filesystem / acima do threshold operacional.',
+            title: 'Uso de montagem acima de 75%',
+            message: 'Montagem acima do threshold operacional.',
             status: 'OPEN',
             openedAt: new DateTimeImmutable('2026-07-15 00:00:00'),
             resolvedAt: null,
@@ -128,7 +184,7 @@ final class Application
             alertSource: 'service',
             severity: 'WARNING',
             title: 'Container worker encerrado',
-            message: 'Container worker saiu antes da ultima coleta.',
+            message: 'Container worker saiu antes da última coleta.',
             status: 'ACKNOWLEDGED',
             openedAt: new DateTimeImmutable('2026-07-14 23:40:00'),
             resolvedAt: null,

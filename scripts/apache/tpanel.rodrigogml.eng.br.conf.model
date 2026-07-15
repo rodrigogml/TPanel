@@ -11,6 +11,7 @@
   AllowOverride None
   Options -Indexes +FollowSymLinks
   DirectoryIndex index.php
+  FallbackResource /index.php
  </Directory>
 
  ErrorLog ${APACHE_LOG_DIR}/tpanel.rodrigogml.eng.br-error.log
@@ -34,6 +35,7 @@
   AllowOverride None
   Options -Indexes +FollowSymLinks
   DirectoryIndex index.php
+  FallbackResource /index.php
  </Directory>
 
  ErrorLog ${APACHE_LOG_DIR}/tpanel.rodrigogml.eng.br-ssl-error.log

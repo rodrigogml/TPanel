@@ -11,7 +11,11 @@ Cmnd_Alias TPANEL_DOCKER_CONTAINER_RESTART = /opt/tpanel/scripts/system/docker-c
 Cmnd_Alias TPANEL_TIMER_STATUS = /opt/tpanel/scripts/system/timer-status *
 Cmnd_Alias TPANEL_TIMER_RESTART = /opt/tpanel/scripts/system/timer-restart *
 Cmnd_Alias TPANEL_COLLECTOR_ONCE = /opt/tpanel/scripts/system/collector-once *
+Cmnd_Alias TPANEL_MEMORY_SWAP_RELOAD = /opt/tpanel/scripts/system/memory-swap-reload, /opt/tpanel/scripts/system/memory-swap-reload *
 Cmnd_Alias TPANEL_NOTICLI_TEST = /opt/tpanel/scripts/system/noticli-test *
+Cmnd_Alias TPANEL_MEMORY_DMIDECODE = /usr/sbin/dmidecode -t memory
+Cmnd_Alias TPANEL_NETWORK_SS = /usr/bin/ss -H -tunlp, /usr/bin/ss -H -tunp state established
+Cmnd_Alias TPANEL_NETWORK_FIREWALL_READ = /usr/sbin/nft list ruleset, /usr/bin/nft list ruleset, /usr/sbin/iptables -S, /usr/bin/iptables -S, /usr/sbin/ufw status numbered, /usr/bin/ufw status numbered
 
 www-data ALL=(tpanel) NOPASSWD: \
     TPANEL_SERVICE_STATUS, \
@@ -23,3 +27,8 @@ www-data ALL=(tpanel) NOPASSWD: \
     TPANEL_TIMER_RESTART, \
     TPANEL_COLLECTOR_ONCE, \
     TPANEL_NOTICLI_TEST
+
+www-data ALL=(root) NOPASSWD: TPANEL_MEMORY_DMIDECODE
+www-data ALL=(root) NOPASSWD: TPANEL_MEMORY_SWAP_RELOAD
+www-data ALL=(root) NOPASSWD: TPANEL_NETWORK_SS
+www-data ALL=(root) NOPASSWD: TPANEL_NETWORK_FIREWALL_READ

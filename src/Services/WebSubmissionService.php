@@ -219,8 +219,8 @@ final class WebSubmissionService
             return $result->stdoutSummary() ?? 'Administrative action executed successfully.';
         }
 
-        return $result->failureReason()
-            ?? $result->stderrSummary()
+        return $result->stderrSummary()
+            ?? $result->failureReason()
             ?? 'Administrative action did not complete successfully.';
     }
 

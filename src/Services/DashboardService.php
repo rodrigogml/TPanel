@@ -66,11 +66,14 @@ final class DashboardService
         $catalog = $this->commandCatalog();
         $serviceActions = $this->actionAvailabilityService->allowedForTarget($actor, $catalog, 'SERVICE');
         $containerActions = $this->actionAvailabilityService->allowedForTarget($actor, $catalog, 'CONTAINER');
+        $diskSummary = $this->diskSummary();
+        $operationalAlerts = $this->operationalAlerts($diskSummary);
+        $healthStatus = $this->worstSeverity([$diskSummary['severity'], ...array_column($operationalAlerts, 'severity')]);
 
         return [
             'name' => 'TPanel',
             'status' => 'Bootstrap ready',
-            'healthStatus' => 'NORMAL',
+            'healthStatus' => $healthStatus,
             'freshnessStatus' => 'FRESH',
             'collectedAt' => gmdate('c'),
             'currentUser' => [
@@ -80,10 +83,10 @@ final class DashboardService
             'cards' => [
                 [
                     'key' => 'overall',
-                    'title' => 'Saude geral',
-                    'severity' => 'NORMAL',
-                    'primaryValue' => 'Normal',
-                    'secondaryValue' => 'sem incidentes criticos',
+                    'title' => 'Saúde geral',
+                    'severity' => $healthStatus,
+                    'primaryValue' => $healthStatus === 'NORMAL' ? 'Normal' : $healthStatus,
+                    'secondaryValue' => $healthStatus === 'NORMAL' ? 'sem incidentes críticos' : 'há alertas ativos',
                 ],
                 [
                     'key' => 'uptime',
@@ -101,17 +104,17 @@ final class DashboardService
                 ],
                 [
                     'key' => 'memory',
-                    'title' => 'Memoria',
+                    'title' => 'Memória',
                     'severity' => 'NORMAL',
                     'primaryValue' => '42%',
-                    'secondaryValue' => 'RAM disponivel',
+                    'secondaryValue' => 'RAM disponível',
                 ],
                 [
                     'key' => 'storage',
                     'title' => 'Disco',
-                    'severity' => 'WARNING',
-                    'primaryValue' => '78%',
-                    'secondaryValue' => '/ quase no limite',
+                    'severity' => $diskSummary['severity'],
+                    'primaryValue' => $diskSummary['primaryValue'],
+                    'secondaryValue' => $diskSummary['secondaryValue'],
                 ],
                 [
                     'key' => 'raid',
@@ -137,9 +140,9 @@ final class DashboardService
                 [
                     'key' => 'alerts',
                     'title' => 'Alertas',
-                    'severity' => 'NORMAL',
-                    'primaryValue' => '0',
-                    'secondaryValue' => 'abertos',
+                    'severity' => $operationalAlerts === [] ? 'NORMAL' : $this->worstSeverity(array_column($operationalAlerts, 'severity')),
+                    'primaryValue' => (string) count($operationalAlerts),
+                    'secondaryValue' => 'ativos',
                 ],
             ],
             'monitoringSections' => [
@@ -156,11 +159,11 @@ final class DashboardService
                 ],
                 [
                     'key' => 'cpu-memory',
-                    'title' => 'CPU e Memoria',
+                    'title' => 'CPU e Memória',
                     'severity' => 'NORMAL',
                     'items' => [
                         ['label' => 'CPU total', 'value' => '18%'],
-                        ['label' => 'Frequencia', 'value' => '2400 MHz'],
+                        ['label' => 'Frequência', 'value' => '2400 MHz'],
                         ['label' => 'RAM usada', 'value' => '42%'],
                         ['label' => 'Swap', 'value' => '0%'],
                     ],
@@ -168,12 +171,12 @@ final class DashboardService
                 [
                     'key' => 'storage-disks',
                     'title' => 'Armazenamento e Discos',
-                    'severity' => 'WARNING',
+                    'severity' => $diskSummary['severity'],
                     'items' => [
-                        ['label' => 'Filesystem /', 'value' => '78% usado'],
-                        ['label' => 'Inodes', 'value' => '12% usado'],
-                        ['label' => 'SMART', 'value' => 'sem erros criticos'],
-                        ['label' => 'Temperatura', 'value' => 'indisponivel'],
+                        ['label' => 'Maior uso', 'value' => $diskSummary['largestMount']],
+                        ['label' => 'Montagens', 'value' => $diskSummary['mountCount']],
+                        ['label' => 'SMART', 'value' => $diskSummary['smart']],
+                        ['label' => 'Temperatura', 'value' => 'não coletada nesta visão'],
                     ],
                 ],
                 [
@@ -184,7 +187,7 @@ final class DashboardService
                         ['label' => 'RAID', 'value' => 'nenhum array detectado'],
                         ['label' => 'Gateway', 'value' => 'respondendo'],
                         ['label' => 'DNS', 'value' => 'configurado'],
-                        ['label' => 'Latencia', 'value' => '12 ms'],
+                        ['label' => 'Latência', 'value' => '12 ms'],
                     ],
                 ],
                 [
@@ -200,12 +203,12 @@ final class DashboardService
                 ],
                 [
                     'key' => 'security-sensors',
-                    'title' => 'Seguranca e Sensores',
+                    'title' => 'Segurança e Sensores',
                     'severity' => 'UNAVAILABLE',
                     'items' => [
                         ['label' => 'SSH falhas', 'value' => '0 recentes'],
                         ['label' => 'Firewall', 'value' => 'ativo'],
-                        ['label' => 'Atualizacoes', 'value' => '0 pendentes'],
+                        ['label' => 'Atualizações', 'value' => '0 pendentes'],
                         ['label' => 'Sensores', 'value' => 'capacidade ausente'],
                     ],
                 ],
@@ -216,8 +219,8 @@ final class DashboardService
                     'items' => [
                         ['label' => 'Cron', 'value' => '3 jobs conhecidos'],
                         ['label' => 'Timers', 'value' => '1 timer ativo'],
-                        ['label' => 'Ultima execucao', 'value' => 'coletado quando disponivel'],
-                        ['label' => 'Proxima execucao', 'value' => 'coletado quando disponivel'],
+                        ['label' => 'Última execução', 'value' => 'coletado quando disponível'],
+                        ['label' => 'Próxima execução', 'value' => 'coletado quando disponível'],
                     ],
                 ],
             ],
@@ -244,7 +247,7 @@ final class DashboardService
             ],
             'actionResultStatuses' => [
                 ['status' => 'SUCCESS', 'label' => 'Executado com sucesso'],
-                ['status' => 'DENIED', 'label' => 'Negado antes da execucao'],
+                ['status' => 'DENIED', 'label' => 'Negado antes da execução'],
                 ['status' => 'FAILED', 'label' => 'Falha reportada'],
                 ['status' => 'TIMED_OUT', 'label' => 'Tempo limite excedido'],
             ],
@@ -271,26 +274,114 @@ final class DashboardService
                     'occurredAt' => '2026-07-15T00:14:00Z',
                 ],
             ],
-            'operationalAlerts' => [
-                [
-                    'id' => 41,
-                    'source' => 'storage',
-                    'title' => 'Uso de disco acima de 75%',
-                    'severity' => 'WARNING',
-                    'status' => 'OPEN',
+            'operationalAlerts' => $operationalAlerts,
+            'alerts' => array_map(
+                static fn (array $alert): array => [
+                    'source' => $alert['source'],
+                    'title' => $alert['title'],
+                    'severity' => $alert['severity'],
                 ],
-                [
-                    'id' => 40,
-                    'source' => 'service',
-                    'title' => 'Container worker encerrado',
-                    'severity' => 'WARNING',
-                    'status' => 'ACKNOWLEDGED',
-                ],
-            ],
-            'alerts' => [
-                ['source' => 'storage', 'title' => 'Uso de disco acima de 75%', 'severity' => 'WARNING'],
-            ],
+                $operationalAlerts,
+            ),
         ];
+    }
+
+    /**
+     * @return array{severity: string, primaryValue: string, secondaryValue: string, largestMount: string, mountCount: string, smart: string, maxPercent: float|null, maxTarget: string|null}
+     */
+    private function diskSummary(): array
+    {
+        $snapshot = (new DiskOverviewService())->snapshot();
+        $mounts = is_array($snapshot['mounts'] ?? null) ? $snapshot['mounts'] : [];
+        $maxPercent = null;
+        $maxTarget = null;
+
+        foreach ($mounts as $mount) {
+            if (!is_array($mount)) {
+                continue;
+            }
+
+            $percent = $this->parsePercent($mount['use%'] ?? null);
+
+            if ($percent === null) {
+                continue;
+            }
+
+            if ($maxPercent === null || $percent > $maxPercent) {
+                $maxPercent = $percent;
+                $maxTarget = (string) ($mount['target'] ?? 'n/a');
+            }
+        }
+
+        $smart = is_array($snapshot['smartctl'] ?? null) && (bool) ($snapshot['smartctl']['available'] ?? false)
+            ? 'smartctl disponível'
+            : 'smartctl indisponível';
+        $severity = $maxPercent === null ? 'UNAVAILABLE' : ($maxPercent > 75.0 ? 'CRITICAL' : ($maxPercent > 50.0 ? 'WARNING' : 'NORMAL'));
+
+        return [
+            'severity' => $severity,
+            'primaryValue' => $maxPercent === null ? 'n/a' : sprintf('%.0f%%', $maxPercent),
+            'secondaryValue' => $maxTarget === null ? 'sem montagens mensuráveis' : sprintf('%s é a maior ocupação', $maxTarget),
+            'largestMount' => $maxTarget === null ? 'n/a' : sprintf('%s com %.0f%% usado', $maxTarget, $maxPercent),
+            'mountCount' => sprintf('%d ativas', count($mounts)),
+            'smart' => $smart,
+            'maxPercent' => $maxPercent,
+            'maxTarget' => $maxTarget,
+        ];
+    }
+
+    /**
+     * @param array{severity: string, primaryValue: string, secondaryValue: string, largestMount: string, mountCount: string, smart: string, maxPercent: float|null, maxTarget: string|null} $diskSummary
+     * @return list<array{id: int, source: string, title: string, severity: string, status: string}>
+     */
+    private function operationalAlerts(array $diskSummary): array
+    {
+        $alerts = [];
+
+        if ($diskSummary['maxPercent'] !== null && $diskSummary['maxPercent'] > 50.0) {
+            $alerts[] = [
+                'id' => 41,
+                'source' => 'storage',
+                'title' => $diskSummary['maxPercent'] > 75.0 ? 'Uso de montagem acima de 75%' : 'Uso de montagem acima de 50%',
+                'severity' => $diskSummary['maxPercent'] > 75.0 ? 'CRITICAL' : 'WARNING',
+                'status' => 'OPEN',
+            ];
+        }
+
+        return $alerts;
+    }
+
+    /**
+     * @param list<string> $severities
+     */
+    private function worstSeverity(array $severities): string
+    {
+        if (in_array('CRITICAL', $severities, true)) {
+            return 'CRITICAL';
+        }
+
+        if (in_array('WARNING', $severities, true)) {
+            return 'WARNING';
+        }
+
+        if (in_array('UNAVAILABLE', $severities, true)) {
+            return 'UNAVAILABLE';
+        }
+
+        return 'NORMAL';
+    }
+
+    private function parsePercent(mixed $usage): ?float
+    {
+        if (is_numeric($usage)) {
+            return (float) $usage;
+        }
+
+        if (is_string($usage) && preg_match('/(\d+(?:\.\d+)?)%/', $usage, $matches)) {
+            return (float) $matches[1];
+        }
+
+        return null;
     }
 
     private function defaultActor(string $username, string $roleName): AuthenticatedUser
