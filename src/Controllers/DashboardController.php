@@ -51,8 +51,7 @@ final class DashboardController
             <div class="app-shell" data-shell>
                 <aside class="sidebar" aria-label="Navegacao principal">
                     <div class="brand">
-                        <span class="brand-mark" aria-hidden="true">TP</span>
-                        <span class="brand-text">Turin Panel</span>
+                        <img class="brand-logo" src="/assets/images/tpanel-logo.png" alt="Turing Panel">
                     </div>
                     <nav class="nav-list">
                         <a class="nav-item is-active" href="#top"><span>Visao geral</span></a>
